@@ -18,6 +18,7 @@ nav{display:flex;overflow-x:auto;gap:7px;padding:12px;background:#181818}
 button{cursor:pointer;border:0;border-radius:6px;padding:12px}
 nav button{background:#292929;color:white;white-space:nowrap}
 nav button.active,.gold{background:#d4af37;color:#111;font-weight:bold}
+button:disabled{opacity:.6;cursor:wait}
 .panel,.card{background:#1c1c1c;padding:16px;border:1px solid #383838;border-radius:9px;margin-bottom:14px}
 input,select{display:block;width:100%;padding:12px;margin:7px 0 14px;background:#292929;color:white;border:1px solid #555;border-radius:6px}
 label{color:#ccc;font-size:13px}
@@ -34,10 +35,11 @@ th{color:#d4af37}
 #app{display:none}
 #login{max-width:430px;margin:55px auto;padding:20px}
 #login .panel{padding:24px}
+#loginMsg{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
-  
+
 <header>
 <h1>PRIME RIDE</h1>
 <small>GESTÃO PROFISSIONAL DE ESTÉTICA DE MOTOS</small>
@@ -46,20 +48,20 @@ th{color:#d4af37}
 <div id="login">
 <div class="panel">
 <h2>Acesso administrativo</h2>
-<p class="muted">Entre com seu e-mail e senha cadastrados no Supabase.</p>
+<p class="muted">Entre com seu e-mail e senha cadastrados.</p>
 <form id="loginForm">
 <label>E-mail</label>
-<input id="email" type="email" required placeholder="Seu e-mail">
+<input id="email" type="email" required placeholder="Seu e-mail" autocomplete="username">
 <label>Senha</label>
-<input id="password" type="password" required placeholder="Sua senha">
-<button class="gold" style="width:100%">Entrar</button>
+<input id="password" type="password" required placeholder="Sua senha" autocomplete="current-password">
+<button id="loginButton" type="submit" class="gold" style="width:100%">Entrar</button>
 </form>
-<p id="loginMsg" class="muted"></p>
+<p id="loginMsg" class="muted" role="status"></p>
 </div>
 </div>
 
 <div id="app">
-<nav id="nav">
+<nav>
 <button class="active" onclick="go('inicio',this)">Início</button>
 <button onclick="go('clientes',this)">Clientes</button>
 <button onclick="go('motos',this)">Motos</button>
@@ -191,7 +193,8 @@ th{color:#d4af37}
 <script>
 const URL='https://ulnrltfzwhppybtbvjtr.supabase.co';
 const KEY='sb_publishable_hMtvEnzcAj7kV4HNZgGb1Q_LTUh9wAs';
-const db=supabase.createClient(URL,KEY);
+
+const db=window.supabase.createClient(URL,KEY);
 
 const config={
 clientes:{fields:['nome','telefone'],labels:['Nome','Telefone']},
@@ -202,41 +205,80 @@ financeiro:{fields:['descricao','tipo','valor','data'],labels:['Descrição','Ti
 estoque:{fields:['produto','quantidade','custo'],labels:['Produto','Quantidade','Custo']}
 };
 
-function msg(t){alert(t)}
-function esc(v){
-return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function dinheiro(v){
-return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function mostrarLogin(mensagem=''){
+document.getElementById('app').style.display='none';
+document.getElementById('login').style.display='block';
+document.getElementById('loginMsg').textContent=mensagem;
 }
 
-async function verificar(){
-const {data,error}=await db.auth.getSession();
-if(error){msg(error.message);return}
-if(data.session) entrar();
-}
-
-function entrar(){
+async function entrar(){
 document.getElementById('login').style.display='none';
 document.getElementById('app').style.display='block';
-atualizar();
+await atualizar();
 }
 
 async function sair(){
-await db.auth.signOut();
-location.reload();
+const {error}=await db.auth.signOut();
+if(error){
+document.getElementById('loginMsg').textContent='Erro ao sair: '+error.message;
+return;
+}
+mostrarLogin('Você saiu da sua conta.');
 }
 
-document.getElementById('loginForm').onsubmit=async e=>{
+document.getElementById('loginForm').addEventListener('submit',async function(e){
 e.preventDefault();
-const email=document.getElementById('email').value;
+
+const botao=document.getElementById('loginButton');
+const mensagem=document.getElementById('loginMsg');
+
+botao.disabled=true;
+botao.textContent='Entrando...';
+mensagem.textContent='Verificando acesso...';
+
+try{
+const email=document.getElementById('email').value.trim();
 const password=document.getElementById('password').value;
-const m=document.getElementById('loginMsg');
-m.textContent='Entrando...';
-const {error}=await db.auth.signInWithPassword({email,password});
-if(error){m.textContent='Erro: '+error.message;return}
-entrar();
-};
+
+const {data,error}=await db.auth.signInWithPassword({email,password});
+
+if(error){
+mensagem.textContent='Não foi possível entrar: '+error.message;
+return;
+}
+
+if(!data.session){
+mensagem.textContent='Login não confirmado. Tente novamente.';
+return;
+}
+
+mensagem.textContent='';
+await entrar();
+
+}catch(error){
+mensagem.textContent='Erro no sistema: '+error.message;
+}finally{
+botao.disabled=false;
+botao.textContent='Entrar';
+}
+});
+
+async function verificar(){
+try{
+const {data,error}=await db.auth.getSession();
+if(error){
+mostrarLogin('Erro ao verificar sessão: '+error.message);
+return;
+}
+if(data.session){
+await entrar();
+}else{
+mostrarLogin('');
+}
+}catch(error){
+mostrarLogin('Erro de conexão: '+error.message);
+}
+}
 
 function go(id,btn){
 document.querySelectorAll('main section').forEach(s=>s.classList.remove('show'));
@@ -244,6 +286,14 @@ document.getElementById(id).classList.add('show');
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
 btn.classList.add('active');
 atualizar();
+}
+
+function esc(v){
+return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function dinheiro(v){
+return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 }
 
 async function carregar(tabela){
@@ -258,6 +308,7 @@ for(const tabela of Object.keys(config)){
 const dados=await carregar(tabela);
 const c=config[tabela];
 const alvo=document.getElementById('lista'+tabela.charAt(0).toUpperCase()+tabela.slice(1));
+
 if(!dados.length){
 alvo.innerHTML='<p class="muted">Nenhum registro cadastrado.</p>';
 }else{
@@ -270,54 +321,64 @@ c.fields.map(f=>'<td>'+esc(item[f])+'</td>').join('')+
 '</tbody></table></div>';
 }
 }
+
 const clientes=await carregar('clientes');
 const motos=await carregar('motos');
 const ordens=await carregar('ordens');
 const fin=await carregar('financeiro');
 const entradas=fin.filter(x=>x.tipo==='Entrada').reduce((s,x)=>s+Number(x.valor||0),0);
+
 document.getElementById('nClientes').textContent=clientes.length;
 document.getElementById('nMotos').textContent=motos.length;
 document.getElementById('nOrdens').textContent=ordens.length;
 document.getElementById('nEntradas').textContent=dinheiro(entradas);
-}catch(e){msg('Não foi possível carregar os dados: '+e.message)}
+
+}catch(e){
+alert('Erro ao carregar os dados: '+e.message);
+}
 }
 
 async function excluir(tabela,id){
 if(!confirm('Deseja excluir este registro?'))return;
 const {error}=await db.from(tabela).delete().eq('id',id);
-if(error){msg('Erro: '+error.message);return}
+if(error){
+alert('Erro ao excluir: '+error.message);
+return;
+}
 atualizar();
 }
 
 Object.keys(config).forEach(tabela=>{
 const form=document.getElementById('form'+tabela.charAt(0).toUpperCase()+tabela.slice(1));
-form.onsubmit=async e=>{
+
+form.addEventListener('submit',async e=>{
 e.preventDefault();
 const registro={};
+
 config[tabela].fields.forEach(f=>{
 const campo=form.elements[f];
 registro[f]=campo.value===''?null:campo.value;
 });
-if(tabela==='valorOS')registro.valor=Number(registro.valor);
-if(tabela==='financeiro')registro.valor=Number(registro.valor);
+
+if(tabela==='financeiro'||tabela==='ordens'){
+registro.valor=Number(registro.valor);
+}
 if(tabela==='estoque'){
 registro.quantidade=Number(registro.quantidade);
 registro.custo=Number(registro.custo);
 }
-if(tabela==='ordens')registro.valor=Number(registro.valor);
-const {error}=await db.from(tabela).insert(registro);
-if(error){msg('Erro ao salvar: '+error.message);return}
-form.reset();
-msg('Cadastro salvo na nuvem!');
-atualizar();
-};
-});
 
-db.auth.onAuthStateChange((event,session)=>{
-if(event==='SIGNED_OUT'){
-document.getElementById('app').style.display='none';
-document.getElementById('login').style.display='block';
+const {error}=await db.from(tabela).insert(registro);
+
+if(error){
+alert('Erro ao salvar: '+error.message);
+return;
 }
+
+form.reset();
+alert('Cadastro salvo na nuvem!');
+atualizar();
+});
 });
 
 verificar();
