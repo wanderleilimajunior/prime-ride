@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171717">
+<title>Prime Ride | Gestão</title>
+<style>
+:root{--bg:#101010;--panel:#1b1b1b;--panel2:#242424;--gold:#c9a24a;--gold2:#e0c477;--txt:#f5f2ea;--muted:#aaa;--line:#393939;--red:#c75b55;--green:#6eaa79}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+header{position:sticky;top:0;z-index:5;background:#171717;border-bottom:1px solid #594726;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:900;letter-spacing:2px;color:var(--gold);font-size:23px}.brand small{display:block;font-size:9px;letter-spacing:3px;color:#eee;font-weight:500}
+.wrap{max-width:1200px;margin:auto;padding:18px}.layout{display:grid;grid-template-columns:220px 1fr;gap:18px}.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;height:max-content;position:sticky;top:82px}
+.nav{width:100%;text-align:left;background:transparent;border:0;color:#ddd;padding:12px;border-radius:9px;margin:2px 0}.nav.active,.nav:hover{background:#3a3020;color:var(--gold2)}
+main{min-width:0}.title{font-size:24px;margin:0 0 5px}.sub{color:var(--muted);margin:0 0 18px;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px}.metric{font-size:25px;font-weight:800;margin-top:8px}.muted{color:var(--muted);font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.btn{border:1px solid #6b552e;background:var(--gold);color:#171717;padding:10px 14px;border-radius:9px;font-weight:700}.btn.secondary{background:#282828;color:var(--txt);border-color:#4a4a4a}.btn.danger{background:#512b29;color:#fff;border-color:#80423e}.btn.small{padding:6px 9px;font-size:12px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}label{font-size:12px;color:#d5c49b}
+input,select,textarea{width:100%;background:#111;border:1px solid #48433a;color:var(--txt);padding:10px;border-radius:8px;outline:none}textarea{min-height:78px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--gold2);font-weight:700}td .muted{display:block}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#3a3020;color:var(--gold2);font-size:11px}
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.photo{background:#111;border:1px dashed #68552f;border-radius:9px;padding:8px;min-height:100px;text-align:center;font-size:12px;color:var(--muted)}.photo img{width:100%;height:95px;object-fit:cover;border-radius:6px}
+canvas{background:#fff;border:1px solid #aaa;border-radius:8px;width:100%;height:150px;touch-action:none}
+.login{max-width:420px;margin:8vh auto;padding:24px;background:var(--panel);border:1px solid #6b552e;border-radius:16px}.login h1{color:var(--gold);text-align:center;letter-spacing:3px}
+.notice{background:#292316;border:1px solid #705a2d;color:#e8d7ad;padding:12px;border-radius:10px;font-size:12px;line-height:1.5}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:#777;font-size:11px;padding:25px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;overflow:auto;gap:4px}.nav{white-space:nowrap;width:auto}.cards{grid-template-columns:repeat(2,1fr)}.photo-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.wrap{padding:12px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.cards{gap:8px}.card{padding:11px}.metric{font-size:20px}.brand{font-size:19px}}
+</style></head>
+<body>
+<div id="loginView" class="login">
+<h1>PRIME RIDE</h1><p class="muted" style="text-align:center">SISTEMA DE GESTÃO • ACESSO DO PROPRIETÁRIO</p>
+<div class="notice">Acesso online pela sua conta Prime Ride. Entre com o mesmo e-mail e senha cadastrados no Supabase.</div>
+<div id="setupHint" class="notice hidden">Primeiro acesso: crie seu usuário e senha. Guarde-os. Esta versão mantém os dados neste navegador/dispositivo.</div>
+<form id="loginForm">
+<div class="field"><label>E-mail</label><input id="loginUser" type="email" required autocomplete="username"></div><br>
+<div class="field"><label>Senha</label><input id="loginPass" type="password" required autocomplete="current-password"></div><br>
+<button class="btn" style="width:100%" id="loginBtn">Entrar</button>
+</form><p id="loginError" class="muted"></p>
+</div>
+<div id="app" class="hidden">
+<header><div class="brand">PRIME RIDE<small>ESTÉTICA PARA MOTOS</small><div id="cloudStatus" class="muted">Conectando à nuvem…</div></div><div><button class="btn secondary small" onclick="backup()">Backup</button> <button class="btn secondary small" onclick="logout()">Sair</button></div></header>
+<div class="wrap"><div class="layout">
+<nav class="side" id="nav">
+<button class="nav active" data-page="inicio">⌂ Início</button>
+<button class="nav" data-page="clientes">♙ Clientes</button>
+<button class="nav" data-page="motos">🏍 Motos</button>
+<button class="nav" data-page="servicos">✦ Serviços e preços</button>
+<button class="nav" data-page="ordens">▤ Ordens / ficha</button>
+<button class="nav" data-page="financeiro">R$ Financeiro</button>
+<button class="nav" data-page="relatorios">▥ Relatórios</button>
+<button class="nav" data-page="config">⚙ Dados e backup</button>
+</nav><main id="content"></main></div>
+<footer>PRIME RIDE • Gestão de estética para motos</footer></div></div>
+<input id="importFile" type="file" accept="application/json" class="hidden">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://ulnrltfzwhppybtbvjtr.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_hMtvEnzcAj7kV4HNZgGb1Q_LTUh9wAs';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const defaultData={clients:[],bikes:[],orders:[],expenses:[],prices:{'Lavagem simples':{'Pequena':45,'Média':55,'Grande':75},'Lavagem completa':{'Pequena':45,'Média':55,'Grande':75},'Lavagem detalhada':{'Pequena':45,'Média':55,'Grande':75},'Polimento':{'Pequena':45,'Média':55,'Grande':75},'Vitrificação':{'Pequena':45,'Média':55,'Grande':75}},services:['Lavagem simples','Lavagem completa','Lavagem detalhada','Polimento','Vitrificação']};
+let db=structuredClone(defaultData),page='inicio',currentUser=null,syncQueue=Promise.resolve();
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function money(n){return Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function logout(){supabaseClient.auth.signOut();currentUser=null;document.getElementById('app').classList.add('hidden');document.getElementById('loginView').classList.remove('hidden')}
+async function loadCloudData(){
+  const uid=currentUser.id;
+  const tables={clients:'prime_ride_clients',bikes:'prime_ride_bikes',orders:'prime_ride_orders',expenses:'prime_ride_expenses'};
+  const next=structuredClone(defaultData);
+  for(const [key,table] of Object.entries(tables)){
+    const {data,error}=await supabaseClient.from(table).select('data').eq('owner_id',uid);
+    if(error) throw error;
+    next[key]=(data||[]).map(row=>row.data);
+  }
+  const {data:settings,error}=await supabaseClient.from('prime_ride_settings').select('data').eq('owner_id',uid).maybeSingle();
+  if(error) throw error;
+  if(settings?.data) Object.assign(next,settings.data);
+  db=next;
+}
+async function syncTable(table,rows){
+  const uid=currentUser.id;
+  const records=rows.map(row=>({id:row.id,owner_id:uid,data:row,updated_at:new Date().toISOString()}));
+  if(records.length){
+    const {error}=await supabaseClient.from(table).upsert(records,{onConflict:'id'});
+    if(error) throw error;
+  }
+  const ids=rows.map(x=>x.id);
+  let q=supabaseClient.from(table).delete().eq('owner_id',uid);
+  if(ids.length) q=q.not('id','in',`(${ids.join(',')})`);
+  const {error}=await q;
+  if(error) throw error;
+}
+function save(){
+  if(!currentUser) return;
+  const snapshot=structuredClone(db);
+  syncQueue=syncQueue.then(async()=>{
+    await syncTable('prime_ride_clients',snapshot.clients);
+    await syncTable('prime_ride_bikes',snapshot.bikes);
+    await syncTable('prime_ride_orders',snapshot.orders);
+    await syncTable('prime_ride_expenses',snapshot.expenses);
+    const {error}=await supabaseClient.from('prime_ride_settings').upsert({owner_id:currentUser.id,data:{prices:snapshot.prices,services:snapshot.services},updated_at:new Date().toISOString()},{onConflict:'owner_id'});
+    if(error) throw error;
+    document.getElementById('cloudStatus').textContent='Sincronizado na nuvem';
+  }).catch(err=>{
+    console.error(err);
+    const el=document.getElementById('cloudStatus');
+    if(el) el.textContent='Falha na sincronização: '+(err.message||'verifique a conexão/permissões');
+  });
+}
+function options(arr,selected=''){return arr.map(x=>`<option ${x===selected?'selected':''} value="${esc(x)}">${esc(x)}</option>`).join('')}
+function clientName(id){return db.clients.find(x=>x.id===id)?.name||'Cliente não encontrado'}
+function bikeLabel(id){let b=db.bikes.find(x=>x.id===id);return b?`${b.model} • ${b.plate}`:'Moto não encontrada'}
+function render(){let c=document.getElementById('content');c.innerHTML=({inicio:home,clientes:clients,motos:bikes,servicos:services,ordens:orders,financeiro:finance,relatorios:reports,config:settings}[page])()}
+async function enterWithSession(session){
+  currentUser=session.user;
+  document.getElementById('loginError').textContent='Carregando seus dados...';
+  try{
+    await loadCloudData();
+    document.getElementById('loginError').textContent='';
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('cloudStatus').textContent='Conectado à nuvem';
+    render();
+  }catch(err){
+    console.error(err);
+    document.getElementById('loginError').textContent='Login realizado, mas não foi possível carregar o banco: '+err.message;
+    currentUser=null;
+  }
+}
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const msg=document.getElementById('loginError'),email=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;
+  msg.textContent='Verificando acesso...';
+  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error){msg.textContent='Não foi possível entrar: '+error.message;return;}
+  await enterWithSession(data.session);
+});
+supabaseClient.auth.getSession().then(({data})=>{if(data.session) enterWithSession(data.session)});
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{page=b.dataset.page;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));render()});
+function heading(t,s=''){return `<h1 class="title">${t}</h1><p class="sub">${s}</p>`}
+function options(arr,selected=''){return arr.map(x=>`<option ${x===selected?'selected':''} value="${esc(x)}">${esc(x)}</option>`).join('')}
+function clientName(id){return db.clients.find(x=>x.id===id)?.name||'Cliente não encontrado'}
+function bikeLabel(id){let b=db.bikes.find(x=>x.id===id);return b?`${b.model} • ${b.plate}`:'Moto não encontrada'}
+function render(){if(!auth())return;let c=document.getElementById('content');c.innerHTML=({inicio:home,clientes:clients,motos:bikes,servicos:services,ordens:orders,financeiro:finance,reports:reports,config:settings}[page])()}
+function home(){let rev=db.orders.filter(o=>o.status==='Entregue').reduce((a,o)=>a+Number(o.total||0),0),open=db.orders.filter(o=>o.status!=='Entregue').length;return `${heading('Painel geral','Resumo da operação da Prime Ride.')}<div class="cards">
+<div class="card"><div class="muted">Clientes</div><div class="metric">${db.clients.length}</div></div>
+<div class="card"><div class="muted">Motocicletas</div><div class="metric">${db.bikes.length}</div></div>
+<div class="card"><div class="muted">Ordens em aberto</div><div class="metric">${open}</div></div>
+<div class="card"><div class="muted">Serviços entregues</div><div class="metric">${money(rev)}</div></div></div>
+<div class="sectionhead"><h3>Atalhos</h3></div><div class="actions"><button class="btn" onclick="go('clientes')">+ Cliente</button><button class="btn" onclick="go('motos')">+ Moto</button><button class="btn" onclick="go('ordens')">+ Ordem de serviço</button></div>
+<div class="notice">Dica: cadastre primeiro o cliente e a motocicleta. Depois abra uma ordem de serviço e preencha a ficha de entrada com avarias, fotos e assinatura.</div>
+<div class="sectionhead"><h3>Ordens recentes</h3></div>${orderTable(db.orders.slice().reverse().slice(0,5))}`}
+function go(p){page=p;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
+function clients(){return `${heading('Clientes','Cadastro e histórico dos clientes.')}<div class="panel"><form onsubmit="addClient(event)"><div class="formgrid">
+<div class="field"><label>Nome completo *</label><input name="name" required></div><div class="field"><label>Telefone / WhatsApp</label><input name="phone"></div>
+<div class="field"><label>CPF (opcional)</label><input name="cpf"></div><div class="field"><label>E-mail</label><input name="email" type="email"></div><div class="field full"><label>Endereço</label><input name="address"></div></div><div class="actions"><button class="btn">Salvar cliente</button></div></form></div>
+<div class="sectionhead"><h3>Clientes cadastrados (${db.clients.length})</h3></div>${db.clients.length?`<div class="panel tablewrap"><table><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th>Ação</th></tr>${db.clients.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.cpf)}</td><td><button class="btn danger small" onclick="del('clients','${x.id}')">Excluir</button></td></tr>`).join('')}</table></div>`:'<div class="panel empty">Nenhum cliente cadastrado.</div>'}`}
+function addClient(e){e.preventDefault();let f=new FormData(e.target);db.clients.push({id:crypto.randomUUID(),name:f.get('name'),phone:f.get('phone'),cpf:f.get('cpf'),email:f.get('email'),address:f.get('address')});save();render()}
+function bikes(){return `${heading('Motocicletas','Cadastre a moto e vincule ao proprietário.')}<div class="panel"><form onsubmit="addBike(event)"><div class="formgrid">
+<div class="field"><label>Proprietário *</label><select name="client" required>${options(['',...db.clients.map(x=>x.id)],'')}</select></div>
+<div class="field"><label>Marca</label><input name="brand" placeholder="Yamaha"></div><div class="field"><label>Modelo *</label><input name="model" required placeholder="MT-03"></div><div class="field"><label>Placa *</label><input name="plate" required></div>
+<div class="field"><label>Ano</label><input name="year"></div><div class="field"><label>Categoria *</label><select name="category">${options(['Pequena','Média','Grande'],'Média')}</select></div></div><div class="actions"><button class="btn">Salvar motocicleta</button></div></form></div>
+<div class="sectionhead"><h3>Motos cadastradas (${db.bikes.length})</h3></div>${db.bikes.length?`<div class="panel tablewrap"><table><tr><th>Moto</th><th>Placa</th><th>Categoria</th><th>Proprietário</th><th>Ação</th></tr>${db.bikes.map(x=>`<tr><td>${esc(x.brand)} ${esc(x.model)}</td><td>${esc(x.plate)}</td><td>${esc(x.category)}</td><td>${esc(clientName(x.client))}</td><td><button class="btn danger small" onclick="del('bikes','${x.id}')">Excluir</button></td></tr>`).join('')}</table></div>`:'<div class="panel empty">Nenhuma moto cadastrada.</div>'}`}
+function addBike(e){e.preventDefault();let f=new FormData(e.target);db.bikes.push({id:crypto.randomUUID(),client:f.get('client'),brand:f.get('brand'),model:f.get('model'),plate:f.get('plate').toUpperCase(),year:f.get('year'),category:f.get('category')});save();render()}
+function services(){return `${heading('Serviços e preços','Defina valores por categoria de motocicleta. Preços ainda não informados ficam em branco.')}<div class="panel tablewrap"><table><tr><th>Serviço</th><th>Pequena (R$)</th><th>Média (R$)</th><th>Grande (R$)</th></tr>${db.services.map((s,i)=>`<tr><td>${esc(s)} ${s==='Pintura'?'<span class="pill">Em breve</span>':''}</td>${['Pequena','Média','Grande'].map(cat=>`<td><input type="number" min="0" step=".01" placeholder="A definir" value="${db.prices[s]?.[cat]??''}" onchange="setPrice('${s}','${cat}',this.value)"></td>`).join('')}</tr>`).join('')}</table></div><div class="actions"><button class="btn secondary" onclick="addService()">+ Adicionar serviço</button></div>`}
+function setPrice(s,c,v){db.prices[s]=db.prices[s]||{};db.prices[s][c]=v===''?'':Number(v);save()}
+function addService(){let s=prompt('Nome do novo serviço:');if(s&&s.trim()){db.services.push(s.trim());db.prices[s.trim()]={};save();render()}}
+const statuses=['Aguardando atendimento','Moto recebida','Em execução','Aguardando aprovação','Finalizada','Entregue'];
+function orders(){return `${heading('Ordens de serviço','Abra uma ordem, registre a inspeção e acompanhe até a entrega.')}<div class="panel"><form onsubmit="addOrder(event)"><div class="formgrid">
+<div class="field"><label>Cliente *</label><select name="client" required>${options(['',...db.clients.map(x=>x.id)])}</select></div><div class="field"><label>Motocicleta *</label><select name="bike" required>${options(['',...db.bikes.map(x=>x.id)])}</select></div>
+<div class="field"><label>Serviço contratado *</label><select name="service">${options(db.services)}</select></div><div class="field"><label>Valor combinado (R$)</label><input name="total" type="number" min="0" step=".01" placeholder="0,00"></div>
+<div class="field"><label>Status</label><select name="status">${options(statuses,'Moto recebida')}</select></div><div class="field"><label>Previsão de entrega</label><input name="due" type="date"></div>
+<div class="field full"><label>Observações do serviço</label><textarea name="notes"></textarea></div></div><div class="actions"><button class="btn">Criar ordem e ficha de entrada</button></div></form></div>
+<div class="sectionhead"><h3>Ordens cadastradas (${db.orders.length})</h3></div>${orderTable(db.orders.slice().reverse())}`}
+function addOrder(e){e.preventDefault();let f=new FormData(e.target),bike=db.bikes.find(x=>x.id===f.get('bike'));db.orders.push({id:crypto.randomUUID(),client:f.get('client'),bike:f.get('bike'),service:f.get('service'),total:Number(f.get('total')||0),status:f.get('status'),due:f.get('due'),notes:f.get('notes'),created:new Date().toISOString(),damage:[],inspectionNotes:'',photos:[],signature:'' ,category:bike?.category||'Média'});save();render()}
+function orderTable(list){if(!list.length)return '<div class="panel empty">Nenhuma ordem cadastrada.</div>';return `<div class="panel tablewrap"><table><tr><th>Data</th><th>Cliente / moto</th><th>Serviço</th><th>Valor</th><th>Status</th><th>Ficha</th></tr>${list.map(o=>`<tr><td>${new Date(o.created).toLocaleDateString('pt-BR')}</td><td>${esc(clientName(o.client))}<span class="muted">${esc(bikeLabel(o.bike))}</span></td><td>${esc(o.service)}</td><td>${money(o.total)}</td><td><select onchange="changeStatus('${o.id}',this.value)">${options(statuses,o.status)}</select></td><td><button class="btn small" onclick="inspection('${o.id}')">Abrir ficha</button></td></tr>`).join('')}</table></div>`}
+function changeStatus(id,s){let o=db.orders.find(x=>x.id===id);o.status=s;save();if(page==='inicio')render()}
+function inspection(id){let o=db.orders.find(x=>x.id===id),b=db.bikes.find(x=>x.id===o.bike);let damage=['Riscos na pintura','Amassados','Peças quebradas','Arranhões nas rodas','Retrovisores danificados','Banco danificado','Pintura desgastada','Sem avarias aparentes'];let d=document.createElement('div');d.style.cssText='position:fixed;inset:0;z-index:20;background:#000c;overflow:auto;padding:15px';d.innerHTML=`<div class="panel" style="max-width:850px;margin:20px auto"><div class="sectionhead"><h2 style="color:var(--gold);margin:0">PRIME RIDE • Ficha de entrada</h2><button class="btn secondary" onclick="this.closest('div[style*=fixed]').remove()">Fechar</button></div><p class="muted">Ordem ${o.id.slice(0,8)} • ${new Date(o.created).toLocaleString('pt-BR')}</p><div class="formgrid"><div class="field"><label>Modelo</label><input id="imodel" value="${esc(b?.model||'')}"></div><div class="field"><label>Placa</label><input id="iplate" value="${esc(b?.plate||'')}"></div><div class="field"><label>Categoria</label><select id="icat">${options(['Pequena','Média','Grande'],o.category)}</select></div><div class="field"><label>Cliente</label><input value="${esc(clientName(o.client))}" disabled></div></div><h3>Inspeção visual</h3><div class="formgrid">${damage.map(x=>`<label style="display:flex;gap:8px;align-items:center;color:#eee"><input style="width:auto" type="checkbox" class="damage" value="${x}" ${o.damage.includes(x)?'checked':''}>${x}</label>`).join('')}</div><div class="field" style="margin-top:12px"><label>Observações / avarias</label><textarea id="inotes">${esc(o.inspectionNotes||'')}</textarea></div><h3>Fotos da entrada</h3><input id="iphotos" type="file" accept="image/*" capture="environment" multiple><div id="photoPreview" class="photo-grid" style="margin-top:10px">${(o.photos||[]).map((p,i)=>`<div class="photo"><img src="${p}"><button class="btn danger small" onclick="removePhoto('${o.id}',${i})">Remover</button></div>`).join('')}</div><h3>Assinatura do cliente</h3><canvas id="sign" width="900" height="240"></canvas><div class="actions"><button class="btn secondary small" id="clearSign">Limpar assinatura</button></div><div class="notice">A assinatura deve ser feita pelo cliente após conferir as condições registradas.</div><div class="actions"><button class="btn" id="saveInspection">Salvar ficha</button><button class="btn secondary" id="printInspection">Imprimir / salvar PDF</button></div></div>`;document.body.appendChild(d);
+let canvas=d.querySelector('#sign'),ctx=canvas.getContext('2d'),drawing=false;ctx.strokeStyle='#111';ctx.lineWidth=4;ctx.lineCap='round';if(o.signature){let im=new Image();im.onload=()=>ctx.drawImage(im,0,0,canvas.width,canvas.height);im.src=o.signature}
+function point(e){let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;return{x,y}}
+canvas.onpointerdown=e=>{drawing=true;canvas.setPointerCapture(e.pointerId);let p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};canvas.onpointermove=e=>{if(!drawing)return;let p=point(e);ctx.lineTo(p.x,p.y);ctx.stroke()};canvas.onpointerup=()=>drawing=false;canvas.onpointercancel=()=>drawing=false;
+d.querySelector('#clearSign').onclick=()=>ctx.clearRect(0,0,canvas.width,canvas.height);
+d.querySelector('#iphotos').onchange=async e=>{for(let file of e.target.files){let data=await compress(file);o.photos.push(data)};d.querySelector('#photoPreview').innerHTML=o.photos.map((p,i)=>`<div class="photo"><img src="${p}"><button class="btn danger small" onclick="removePhoto('${o.id}',${i})">Remover</button></div>`).join('')};
+d.querySelector('#saveInspection').onclick=()=>{o.damage=[...d.querySelectorAll('.damage:checked')].map(x=>x.value);o.inspectionNotes=d.querySelector('#inotes').value;o.category=d.querySelector('#icat').value;o.signature=canvas.toDataURL('image/png');let bike=db.bikes.find(x=>x.id===o.bike);if(bike){bike.model=d.querySelector('#imodel').value;bike.plate=d.querySelector('#iplate').value.toUpperCase();bike.category=o.category}o.inspectedAt=new Date().toISOString();save();alert('Ficha salva e enviada para a nuvem.');d.remove();render()};
+d.querySelector('#printInspection').onclick=()=>{let printWin=window.open('','_blank');if(!printWin){alert('Permita pop-ups para imprimir ou salvar em PDF.');return}let pics=(o.photos||[]).map(p=>`<img src="${p}" style="width:45%;margin:1%">`).join('');printWin.document.write(`<html><head><title>Ficha Prime Ride</title><style>body{font:14px Arial;padding:25px;color:#111}h1{background:#171717;color:#c9a24a;padding:20px;text-align:center}table{width:100%;border-collapse:collapse}td{border:1px solid #aaa;padding:9px}img{max-height:180px;object-fit:contain}.sign{max-width:400px;max-height:100px}</style></head><body><h1>PRIME RIDE<br><small>FICHA DE ENTRADA E INSPEÇÃO</small></h1><p><b>Cliente:</b> ${esc(clientName(o.client))}</p><p><b>Modelo:</b> ${esc(d.querySelector('#imodel').value)} &nbsp; <b>Placa:</b> ${esc(d.querySelector('#iplate').value)} &nbsp; <b>Categoria:</b> ${esc(d.querySelector('#icat').value)}</p><p><b>Data/hora:</b> ${new Date(o.created).toLocaleString('pt-BR')}</p><h3>Avarias identificadas</h3><p>${[...d.querySelectorAll('.damage:checked')].map(x=>esc(x.value)).join(' • ')||'Nenhuma marcada'}</p><h3>Observações</h3><p>${esc(d.querySelector('#inotes').value)}</p><h3>Fotos</h3>${pics}<h3>Assinatura do cliente</h3><img class="sign" src="${canvas.toDataURL('image/png')}"><p>____________________________________</p><p>Assinatura do cliente</p><script>window.onload=()=>window.print()<\/script></body></html>`);printWin.document.close()};
+}
+function removePhoto(id,i){let o=db.orders.find(x=>x.id===id);o.photos.splice(i,1);save();document.querySelector('[id=iphotos]')?.dispatchEvent(new Event('change'))}
+function compress(file){return new Promise(res=>{let r=new FileReader();r.onload=()=>{let im=new Image();im.onload=()=>{let c=document.createElement('canvas'),scale=Math.min(1,1200/Math.max(im.width,im.height));c.width=im.width*scale;c.height=im.height*scale;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};im.src=r.result};r.readAsDataURL(file)})}
+function finance(){let income=db.orders.filter(o=>o.status==='Entregue').reduce((a,o)=>a+Number(o.total||0),0),expenses=db.expenses.reduce((a,x)=>a+Number(x.value||0),0);return `${heading('Financeiro','Registre despesas e acompanhe recebimentos das ordens entregues.')}<div class="cards"><div class="card"><div class="muted">Receita de ordens entregues</div><div class="metric">${money(income)}</div></div><div class="card"><div class="muted">Despesas registradas</div><div class="metric">${money(expenses)}</div></div><div class="card"><div class="muted">Saldo parcial</div><div class="metric">${money(income-expenses)}</div></div></div><div class="sectionhead"><h3>Adicionar despesa</h3></div><div class="panel"><form onsubmit="addExpense(event)"><div class="formgrid"><div class="field"><label>Descrição</label><input name="desc" required></div><div class="field"><label>Valor (R$)</label><input name="value" type="number" min="0.01" step=".01" required></div><div class="field"><label>Data</label><input name="date" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Categoria</label><select name="cat">${options(['Produtos','Materiais','Aluguel','Energia','Água','Marketing','Outros'])}</select></div></div><div class="actions"><button class="btn">Registrar despesa</button></div></form></div><div class="sectionhead"><h3>Despesas</h3></div>${db.expenses.length?`<div class="panel tablewrap"><table><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr>${db.expenses.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.desc)}</td><td>${esc(x.cat)}</td><td>${money(x.value)}</td><td><button class="btn danger small" onclick="del('expenses','${x.id}')">Excluir</button></td></tr>`).join('')}</table></div>`:'<div class="panel empty">Nenhuma despesa.</div>'}`}
+function addExpense(e){e.preventDefault();let f=new FormData(e.target);db.expenses.push({id:crypto.randomUUID(),desc:f.get('desc'),value:Number(f.get('value')),date:f.get('date'),cat:f.get('cat')});save();render()}
+function reports(){let delivered=db.orders.filter(x=>x.status==='Entregue');let total=delivered.reduce((a,x)=>a+Number(x.total||0),0);return `${heading('Relatórios','Indicadores calculados com os registros sincronizados na nuvem.')}<div class="cards"><div class="card"><div class="muted">Total de ordens</div><div class="metric">${db.orders.length}</div></div><div class="card"><div class="muted">Entregues</div><div class="metric">${delivered.length}</div></div><div class="card"><div class="muted">Faturamento entregue</div><div class="metric">${money(total)}</div></div><div class="card"><div class="muted">Ticket médio</div><div class="metric">${money(delivered.length?total/delivered.length:0)}</div></div></div><div class="sectionhead"><h3>Serviços realizados</h3></div><div class="panel">${db.services.map(s=>`<p>${esc(s)} <span class="pill">${delivered.filter(o=>o.service===s).length} entregues</span></p>`).join('')}</div>`}
+function settings(){return `${heading('Dados e backup','Proteja seus registros exportando uma cópia de segurança.')}<div class="notice">Os cadastros são sincronizados com o banco de dados Supabase da Prime Ride após cada alteração. O botão Backup baixa uma cópia JSON manual. O backup automático do provedor e o armazenamento remoto de fotos ainda precisam ser configurados.</div><div class="actions"><button class="btn" onclick="backup()">Baixar backup agora</button><button class="btn secondary" onclick="document.getElementById('importFile').click()">Restaurar backup</button></div><div class="panel"><b>Resumo dos dados</b><p class="muted">${db.clients.length} clientes • ${db.bikes.length} motos • ${db.orders.length} ordens • ${db.expenses.length} despesas</p><button class="btn danger small" onclick="clearAll()">Apagar todos os dados</button></div>`}
+function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='prime-ride-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.clients||!x.orders)throw Error();db={...structuredClone(defaultData),...x};save();alert('Backup restaurado.');render()}catch(err){alert('Arquivo de backup inválido.')}e.target.value=''}
+function del(type,id){if(confirm('Tem certeza que deseja excluir este registro?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
+function clearAll(){if(confirm('Isso apagará todos os cadastros deste navegador. Continuar?')){db=structuredClone(defaultData);save();render()}}
+</script></body></html>
