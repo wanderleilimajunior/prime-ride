@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Ride | Gestão</title>
+<style>
+:root{--gold:#d4af37;--bg:#101010;--panel:#1b1b1b;--text:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{background:#080808;padding:20px;border-bottom:2px solid var(--gold)}
+header h1{margin:0;color:var(--gold);letter-spacing:3px}
+header small{color:#aaa}
+nav{display:flex;gap:7px;padding:12px;overflow-x:auto;background:#151515}
+nav button{white-space:nowrap;background:#292929;color:white;border:1px solid #444;padding:12px;border-radius:7px}
+nav button.active{background:var(--gold);color:#000}
+main{padding:18px;max-width:1100px;margin:auto}
+h2{color:var(--gold)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.card,.panel{background:var(--panel);padding:17px;border:1px solid #333;border-radius:10px;margin-bottom:14px}
+.card strong{display:block;font-size:25px;color:var(--gold);margin-top:10px}
+input,select,textarea{width:100%;padding:12px;margin:7px 0 14px;background:#292929;color:white;border:1px solid #555;border-radius:6px}
+label{color:#ccc;font-size:13px}
+button{cursor:pointer}
+.save{background:var(--gold);color:#000;border:0;padding:13px 20px;border-radius:6px;font-weight:bold}
+.delete{background:#8d2929;color:white;border:0;padding:7px;border-radius:5px}
+table{width:100%;border-collapse:collapse;min-width:480px}
+td,th{text-align:left;padding:11px;border-bottom:1px solid #444;font-size:13px}
+th{color:var(--gold)}
+.tablewrap{overflow-x:auto}
+section{display:none}
+section.show{display:block}
+.muted{color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>PRIME RIDE</h1>
+<small>GESTÃO PROFISSIONAL DE ESTÉTICA DE MOTOS</small>
+</header>
+
+<nav id="nav">
+<button class="active" onclick="go('inicio',this)">Início</button>
+<button onclick="go('clientes',this)">Clientes</button>
+<button onclick="go('motos',this)">Motos</button>
+<button onclick="go('agenda',this)">Agenda</button>
+<button onclick="go('ordens',this)">Ordens de serviço</button>
+<button onclick="go('financeiro',this)">Financeiro</button>
+<button onclick="go('estoque',this)">Estoque</button>
+<button onclick="go('relatorios',this)">Relatórios</button>
+</nav>
+
+<main>
+
+<section id="inicio" class="show">
+<h2>Painel de controle</h2>
+<p class="muted">Bem-vindo à Prime Ride!</p>
+<div class="cards">
+<div class="card">Clientes<strong id="totalClientes">0</strong></div>
+<div class="card">Motos<strong id="totalMotos">0</strong></div>
+<div class="card">Serviços<strong id="totalOrdens">0</strong></div>
+<div class="card">Faturamento<strong id="faturamento">R$ 0,00</strong></div>
+</div>
+<div class="panel">
+<h3>Últimos serviços</h3>
+<div id="ultimos"></div>
+</div>
+</section>
+
+<section id="clientes">
+<h2>Cadastro de clientes</h2>
+<div class="panel">
+<form onsubmit="add(event,'clientes',['nome','telefone'])">
+<label>Nome do cliente</label><input id="nome" required placeholder="Nome completo">
+<label>Telefone</label><input id="telefone" required placeholder="(00) 00000-0000">
+<button class="save">Cadastrar cliente</button>
+</form>
+</div>
+<div id="listaClientes"></div>
+</section>
+
+<section id="motos">
+<h2>Cadastro de motos</h2>
+<div class="panel">
+<form onsubmit="add(event,'motos',['marca','modelo','placa','dono'])">
+<label>Marca</label><input id="marca" required placeholder="Ex: Yamaha">
+<label>Modelo</label><input id="modelo" required placeholder="Ex: MT-09">
+<label>Placa</label><input id="placa" required placeholder="ABC-1234">
+<label>Proprietário</label><input id="dono" required placeholder="Nome do cliente">
+<button class="save">Cadastrar moto</button>
+</form>
+</div>
+<div id="listaMotos"></div>
+</section>
+
+<section id="agenda">
+<h2>Agenda de serviços</h2>
+<div class="panel">
+<form onsubmit="add(event,'agenda',['data','hora','clienteAgenda','servicoAgenda'])">
+<label>Data</label><input id="data" type="date" required>
+<label>Horário</label><input id="hora" type="time" required>
+<label>Cliente</label><input id="clienteAgenda" required>
+<label>Serviço</label>
+<select id="servicoAgenda">
+<option>Lavagem simples</option>
+<option>Lavagem completa</option>
+<option>Lavagem detalhada</option>
+<option>Polimento</option>
+<option>Vitrificação</option>
+</select>
+<button class="save">Agendar serviço</button>
+</form>
+</div>
+<div id="listaAgenda"></div>
+</section>
+
+<section id="ordens">
+<h2>Ordens de serviço</h2>
+<div class="panel">
+<form onsubmit="add(event,'ordens',['numero','clienteOS','motoOS','servicoOS','valorOS','statusOS'])">
+<label>Número da ordem</label><input id="numero" required placeholder="Ex: 001">
+<label>Cliente</label><input id="clienteOS" required>
+<label>Moto</label><input id="motoOS" required placeholder="Ex: Yamaha MT-09">
+<label>Serviço</label>
+<select id="servicoOS">
+<option>Lavagem simples</option>
+<option>Lavagem completa</option>
+<option>Lavagem detalhada</option>
+<option>Polimento</option>
+<option>Vitrificação</option>
+</select>
+<label>Valor (R$)</label><input id="valorOS" type="number" min="0" step="0.01" required>
+<label>Status</label>
+<select id="statusOS">
+<option>Agendado</option>
+<option>Em andamento</option>
+<option>Concluído</option>
+<option>Entregue</option>
+</select>
+<button class="save">Criar ordem de serviço</button>
+</form>
+</div>
+<div id="listaOrdens"></div>
+</section>
+
+<section id="financeiro">
+<h2>Controle financeiro</h2>
+<div class="panel">
+<form onsubmit="add(event,'financeiro',['descricaoFin','tipoFin','valorFin','dataFin'])">
+<label>Descrição</label><input id="descricaoFin" required placeholder="Ex: Serviço de polimento">
+<label>Tipo</label>
+<select id="tipoFin"><option>Entrada</option><option>Saída</option></select>
+<label>Valor (R$)</label><input id="valorFin" type="number" min="0" step="0.01" required>
+<label>Data</label><input id="dataFin" type="date" required>
+<button class="save">Registrar movimentação</button>
+</form>
+</div>
+<div class="cards">
+<div class="card">Entradas<strong id="entradas">R$ 0,00</strong></div>
+<div class="card">Saídas<strong id="saidas">R$ 0,00</strong></div>
+<div class="card">Saldo<strong id="saldo">R$ 0,00</strong></div>
+</div>
+<div id="listaFinanceiro"></div>
+</section>
+
+<section id="estoque">
+<h2>Controle de estoque</h2>
+<div class="panel">
+<form onsubmit="add(event,'estoque',['produto','quantidade','custo'])">
+<label>Produto</label><input id="produto" required placeholder="Ex: Shampoo automotivo">
+<label>Quantidade</label><input id="quantidade" type="number" min="0" required>
+<label>Custo unitário (R$)</label><input id="custo" type="number" min="0" step="0.01" required>
+<button class="save">Cadastrar produto</button>
+</form>
+</div>
+<div id="listaEstoque"></div>
+</section>
+
+<section id="relatorios">
+<h2>Relatórios</h2>
+<div class="panel">
+<h3>Resumo geral</h3>
+<p id="resumo"></p>
+<button class="save" onclick="exportar()">Baixar dados em CSV</button>
+</div>
+</section>
+
+</main>
+
+<script>
+const categorias=['clientes','motos','agenda','ordens','financeiro','estoque'];
+let dados={};
+
+function carregar(){
+categorias.forEach(c=>{
+try{dados[c]=JSON.parse(localStorage.getItem('pr_'+c))||[]}
+catch(e){dados[c]=[]}
+});
+render();
+}
+
+function salvar(c){
+localStorage.setItem('pr_'+c,JSON.stringify(dados[c]));
+}
+
+function go(id,btn){
+document.querySelectorAll('main section').forEach(s=>s.classList.remove('show'));
+document.getElementById(id).classList.add('show');
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+render();
+}
+
+function add(e,c,campos){
+e.preventDefault();
+let item={};
+campos.forEach(k=>item[k]=document.getElementById(k).value);
+dados[c].push(item);
+salvar(c);
+e.target.reset();
+render();
+alert('Cadastro realizado com sucesso!');
+}
+
+function moeda(n){
+return Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function tabela(c,campos,titulo){
+let el=document.getElementById('lista'+titulo);
+if(!el)return;
+if(!dados[c].length){el.innerHTML='<p class="muted">Nenhum registro cadastrado.</p>';return}
+el.innerHTML='<div class="panel tablewrap"><table><thead><tr>'+
+campos.map(x=>'<th>'+x[1]+'</th>').join('')+
+'<th>Ação</th></tr></thead><tbody>'+
+dados[c].map((item,i)=>'<tr>'+
+campos.map(x=>'<td>'+esc(item[x[0]])+'</td>').join('')+
+'<td><button class="delete" onclick="remover(\''+c+'\','+i+')">Excluir</button></td></tr>').join('')+
+'</tbody></table></div>';
+}
+
+function esc(v){
+return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function remover(c,i){
+if(confirm('Deseja realmente excluir este registro?')){
+dados[c].splice(i,1);salvar(c);render();
+}
+}
+
+function render(){
+tabela('clientes',[['nome','Nome'],['telefone','Telefone']],'Clientes');
+tabela('motos',[['marca','Marca'],['modelo','Modelo'],['placa','Placa'],['dono','Proprietário']],'Motos');
+tabela('agenda',[['data','Data'],['hora','Hora'],['clienteAgenda','Cliente'],['servicoAgenda','Serviço']],'Agenda');
+tabela('ordens',[['numero','Nº OS'],['clienteOS','Cliente'],['motoOS','Moto'],['servicoOS','Serviço'],['valorOS','Valor'],['statusOS','Status']],'Ordens');
+tabela('financeiro',[['descricaoFin','Descrição'],['tipoFin','Tipo'],['valorFin','Valor'],['dataFin','Data']],'Financeiro');
+tabela('estoque',[['produto','Produto'],['quantidade','Quantidade'],['custo','Custo unitário']],'Estoque');
+
+let entradas=dados.financeiro.filter(x=>x.tipoFin==='Entrada').reduce((s,x)=>s+Number(x.valorFin),0);
+let saidas=dados.financeiro.filter(x=>x.tipoFin==='Saída').reduce((s,x)=>s+Number(x.valorFin),0);
+
+document.getElementById('totalClientes').textContent=dados.clientes.length;
+document.getElementById('totalMotos').textContent=dados.motos.length;
+document.getElementById('totalOrdens').textContent=dados.ordens.length;
+document.getElementById('faturamento').textContent=moeda(entradas);
+document.getElementById('entradas').textContent=moeda(entradas);
+document.getElementById('saidas').textContent=moeda(saidas);
+document.getElementById('saldo').textContent=moeda(entradas-saidas);
+
+document.getElementById('ultimos').innerHTML=dados.ordens.slice(-5).reverse().map(x=>'<p>'+esc(x.clienteOS)+' — '+esc(x.servicoOS)+' — '+esc(x.statusOS)+'</p>').join('')||'<p class="muted">Nenhum serviço registrado.</p>';
+
+document.getElementById('resumo').textContent=
+'Clientes: '+dados.clientes.length+
+' | Motos: '+dados.motos.length+
+' | Ordens: '+dados.ordens.length+
+' | Entradas: '+moeda(entradas)+
+' | Saídas: '+moeda(saidas)+
+' | Saldo: '+moeda(entradas-saidas);
+}
+
+function exportar(){
+let linhas=['Categoria,Registro'];
+categorias.forEach(c=>dados[c].forEach(x=>{
+linhas.push('"'+c+'","'+Object.values(x).join(' - ').replace(/"/g,'""')+'"');
+}));
+let blob=new Blob(['\ufeff'+linhas.join('\n')],{type:'text/csv;charset=utf-8'});
+let a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download='prime-ride-relatorio.csv';
+a.click();
+URL.revokeObjectURL(a.href);
+}
+
+carregar();
+</script>
+</body>
+</html>
